@@ -4,11 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIB Recruitment — Закон не спрашивает</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
         body {
             margin: 0;
             overflow-x: hidden;
@@ -56,9 +63,13 @@
             box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
             transition: all 0.2s;
         }
-        .btn-fib:hover {
+        .btn-fib:hover:not(:disabled) {
             box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
             transform: scale(1.02);
+        }
+        .btn-fib:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         .input-field {
             background: rgba(0, 0, 0, 0.5);
@@ -78,7 +89,6 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
-        /* Плавное появление блоков при скролле */
         .fade-in-section {
             opacity: 0;
             transform: translateY(30px);
@@ -125,7 +135,6 @@
                 ПОЧЕМУ <span class="text-blue-500">FIB</span>?
             </h2>
             <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto w-full">
-                <!-- Card 1 -->
                 <div class="glass-card p-8 rounded-lg fade-in-section">
                     <div class="text-5xl mb-4">🛡️</div>
                     <h3 class="text-2xl font-bold text-white mb-3">Элита правопорядка</h3>
@@ -133,7 +142,6 @@
                         Пока другие патрулируют улицы, ты раскрываешь дела федерального масштаба. Только лучшие из лучших.
                     </p>
                 </div>
-                <!-- Card 2 -->
                 <div class="glass-card p-8 rounded-lg fade-in-section" style="transition-delay: 0.1s;">
                     <div class="text-5xl mb-4">⚙️</div>
                     <h3 class="text-2xl font-bold text-white mb-3">Передовое оснащение</h3>
@@ -141,7 +149,6 @@
                         Доступ к лучшему вооружению, спецтехнике и закрытым базам данных штата. Никаких компромиссов.
                     </p>
                 </div>
-                <!-- Card 3 -->
                 <div class="glass-card p-8 rounded-lg fade-in-section" style="transition-delay: 0.2s;">
                     <div class="text-5xl mb-4">🤝</div>
                     <h3 class="text-2xl font-bold text-white mb-3">Братство и дисциплина</h3>
@@ -196,13 +203,12 @@
                             <input type="text" name="discord" required class="input-field w-full px-4 py-3 rounded-sm text-sm" placeholder="username#0000">
                         </div>
                         <div class="pt-4">
-                            <button type="submit" class="btn-fib w-full py-4 rounded-sm font-bold text-white uppercase tracking-widest text-lg">
+                            <button type="submit" id="submit-btn" class="btn-fib w-full py-4 rounded-sm font-bold text-white uppercase tracking-widest text-lg">
                                 ПОДАТЬ ЗАЯВКУ В FIB
                             </button>
                         </div>
                     </form>
 
-                    <!-- Confirmation Message -->
                     <div id="confirmation" class="hidden mt-6 p-6 bg-green-900/30 border border-green-500/50 rounded-sm text-center">
                         <p class="text-green-400 font-mono text-sm mb-2">ЗАЯВКА ПРИНЯТА</p>
                         <p class="text-white text-2xl font-bold" id="case-number">#FIB-0000</p>
@@ -250,7 +256,6 @@
             rimLight.position.set(0, 4, -5);
             scene.add(rimLight);
 
-            // Dynamic police lights (flashing)
             const policeLightRed = new THREE.PointLight(0xff0000, 0, 20);
             policeLightRed.position.set(-2, 3, 2);
             scene.add(policeLightRed);
@@ -260,16 +265,22 @@
 
             // --- 3D OBJECTS ---
 
-            // Group for all scroll-driven content
             const scrollGroup = new THREE.Group();
             scene.add(scrollGroup);
 
-            // 1. FIB Shield (low-poly style)
+            // Helper: create standard material with transparency ready (so opacity works)
+            function makeMat(params) {
+                return new THREE.MeshStandardMaterial(Object.assign({
+                    transparent: true,
+                    opacity: 1
+                }, params));
+            }
+
+            // 1. FIB Shield
             const shieldGroup = new THREE.Group();
-            
-            // Shield body (hexagon-ish)
+
             const shieldGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.2, 6);
-            const shieldMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, emissive: 0x0a1a3a, roughness: 0.3, metalness: 0.7 });
+            const shieldMat = makeMat({ color: 0x1e3a8a, emissive: 0x0a1a3a, roughness: 0.3, metalness: 0.7 });
             const shieldBody = new THREE.Mesh(shieldGeo, shieldMat);
             shieldBody.rotation.x = Math.PI / 2;
             shieldBody.rotation.z = Math.PI / 6;
@@ -277,23 +288,20 @@
             shieldBody.receiveShadow = true;
             shieldGroup.add(shieldBody);
 
-            // Shield rim
             const rimGeo = new THREE.TorusGeometry(1.25, 0.06, 8, 6);
-            const rimMat = new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 0.8 });
+            const rimMat = makeMat({ color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 0.8 });
             const rim = new THREE.Mesh(rimGeo, rimMat);
             rim.rotation.x = Math.PI / 2;
             rim.rotation.z = Math.PI / 6;
             shieldGroup.add(rim);
 
-            // Center star / emblem
             const starGeo = new THREE.OctahedronGeometry(0.35, 0);
-            const starMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x3b82f6, emissiveIntensity: 1.5 });
+            const starMat = makeMat({ color: 0xffffff, emissive: 0x3b82f6, emissiveIntensity: 1.5 });
             const star = new THREE.Mesh(starGeo, starMat);
             star.position.z = 0.15;
             shieldGroup.add(star);
 
-            // Cross behind star (thin boxes)
-            const crossMat = new THREE.MeshStandardMaterial({ color: 0xbfdbfe, emissive: 0x1e3a8a });
+            const crossMat = makeMat({ color: 0xbfdbfe, emissive: 0x1e3a8a });
             const cross1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 0.02), crossMat);
             cross1.position.z = 0.12;
             shieldGroup.add(cross1);
@@ -304,12 +312,11 @@
             shieldGroup.position.set(0, 2.5, 0);
             scrollGroup.add(shieldGroup);
 
-            // 2. Door (appears on scroll)
+            // 2. Door
             const doorGroup = new THREE.Group();
-            const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6, metalness: 0.4 });
-            const doorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.3, emissive: 0x050810 });
-            
-            // Door frame (U-shape)
+            const doorFrameMat = makeMat({ color: 0x1e293b, roughness: 0.6, metalness: 0.4 });
+            const doorMat = makeMat({ color: 0x0f172a, roughness: 0.5, metalness: 0.3, emissive: 0x050810 });
+
             const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3.2, 0.2), doorFrameMat);
             frameLeft.position.set(-1.2, 1.6, 0);
             frameLeft.castShadow = true;
@@ -323,82 +330,69 @@
             frameTop.castShadow = true;
             doorGroup.add(frameTop);
 
-            // The door itself (will be animated)
             const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.0, 0.15), doorMat);
             doorPanel.position.set(0, 1.6, 0);
             doorPanel.castShadow = true;
             doorPanel.receiveShadow = true;
             doorGroup.add(doorPanel);
-            
-            // Door handle
-            const handleMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+
+            const handleMat = makeMat({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
             const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), handleMat);
             handle.position.set(0.8, 1.6, 0.12);
             doorPanel.add(handle);
 
-            // Store reference to door panel for animation
             doorGroup.userData.doorPanel = doorPanel;
-
             doorGroup.position.set(0, 0, -5);
             scrollGroup.add(doorGroup);
 
-            // 3. Agent silhouette (stylized, dynamic pose)
+            // 3. Agent
             const agentGroup = new THREE.Group();
 
-            const suitMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4, metalness: 0.2 });
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0x8b6b4a, roughness: 0.7 });
-            const glassMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, emissive: 0x3b82f6, emissiveIntensity: 0.3, metalness: 0.9, roughness: 0.1 });
+            const suitMat = makeMat({ color: 0x111827, roughness: 0.4, metalness: 0.2 });
+            const skinMat = makeMat({ color: 0x8b6b4a, roughness: 0.7 });
+            const glassMat = makeMat({ color: 0x0a0a0a, emissive: 0x3b82f6, emissiveIntensity: 0.3, metalness: 0.9, roughness: 0.1 });
 
-            // Torso
             const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.0, 0.35), suitMat);
             torso.position.y = 1.2;
             torso.castShadow = true;
             agentGroup.add(torso);
 
-            // Head
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), skinMat);
             head.position.y = 1.9;
             head.castShadow = true;
             agentGroup.add(head);
 
-            // Glasses (neon outline)
             const glasses = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.1), glassMat);
             glasses.position.set(0, 1.95, 0.22);
             agentGroup.add(glasses);
 
-            // Arms (dynamic pose - one forward, one back)
-            const armMat = suitMat;
-            // Right arm (forward, holding carbine)
-            const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.2), armMat);
+            const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.2), suitMat);
             rightArm.position.set(0.5, 1.4, 0.3);
             rightArm.rotation.x = -1.0;
             rightArm.rotation.z = -0.3;
             rightArm.castShadow = true;
             agentGroup.add(rightArm);
-            
-            // Left arm (back)
-            const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.2), armMat);
+
+            const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.2), suitMat);
             leftArm.position.set(-0.5, 1.3, -0.2);
             leftArm.rotation.x = 0.5;
             leftArm.rotation.z = 0.3;
             leftArm.castShadow = true;
             agentGroup.add(leftArm);
 
-            // Legs (dynamic, one forward)
             const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), suitMat);
             rightLeg.position.set(0.2, 0.5, 0.2);
             rightLeg.rotation.x = 0.3;
             rightLeg.castShadow = true;
             agentGroup.add(rightLeg);
-            
+
             const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), suitMat);
             leftLeg.position.set(-0.2, 0.5, -0.2);
             leftLeg.rotation.x = -0.2;
             leftLeg.castShadow = true;
             agentGroup.add(leftLeg);
 
-            // Carbine (simple low-poly)
-            const gunMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.8, roughness: 0.3 });
+            const gunMat = makeMat({ color: 0x1f2937, metalness: 0.8, roughness: 0.3 });
             const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.8), gunMat);
             gunBody.position.set(0.7, 1.6, 0.8);
             gunBody.rotation.x = -0.2;
@@ -412,7 +406,19 @@
             agentGroup.rotation.y = 0.2;
             scrollGroup.add(agentGroup);
 
-            // --- PARTICLES (for atmosphere) ---
+            // --- Collect all unique materials of scrollGroup for fade ---
+            const scrollMaterials = new Set();
+            scrollGroup.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => scrollMaterials.add(m));
+                    } else {
+                        scrollMaterials.add(child.material);
+                    }
+                }
+            });
+
+            // --- PARTICLES ---
             const particleGeo = new THREE.BufferGeometry();
             const particleCount = 300;
             const positions = new Float32Array(particleCount * 3);
@@ -427,17 +433,18 @@
             scene.add(particles);
 
             // --- SCROLL LOGIC ---
-            let scrollProgress = 0; // 0 to 1
-            const scrollRange = 2000; // pixels for full animation
+            let scrollProgress = 0;
+            const scrollRange = 2000;
 
             function updateScrollProgress() {
                 const scrollY = window.scrollY;
                 scrollProgress = Math.min(1, Math.max(0, scrollY / scrollRange));
             }
 
-            window.addEventListener('scroll', updateScrollProgress);
+            window.addEventListener('scroll', updateScrollProgress, { passive: true });
+            updateScrollProgress();
 
-            // --- MOUSE INTERACTION (for hero shield) ---
+            // --- MOUSE ---
             let mouseX = 0, mouseY = 0;
             window.addEventListener('mousemove', (e) => {
                 mouseX = (e.clientX / window.innerWidth) * 2 - 1;
@@ -445,37 +452,28 @@
             });
 
             // --- ANIMATION LOOP ---
-            let clock = new THREE.Clock();
+            const clock = new THREE.Clock();
 
             function animate() {
                 requestAnimationFrame(animate);
-                const delta = clock.getDelta();
                 const elapsedTime = performance.now() * 0.001;
 
-                // Update scroll progress
-                updateScrollProgress();
+                // --- SCROLL-DRIVEN ---
 
-                // --- SCROLL-DRIVEN ANIMATIONS ---
-
-                // Phase 1: 0 - 0.4 -> Shield flies forward / camera moves
-                // Phase 2: 0.4 - 0.7 -> Door appears, agent kicks it
-                // Phase 3: 0.7 - 1.0 -> Agent flies forward, scene fades
-
-                // Shield animation
+                // Shield
                 const shieldPhase = Math.min(1, scrollProgress / 0.4);
-                shieldGroup.position.z = shieldPhase * 15; // flies toward camera
+                shieldGroup.position.z = shieldPhase * 15;
                 shieldGroup.position.y = 2.5 + Math.sin(elapsedTime * 0.5) * 0.1;
                 shieldGroup.rotation.y = elapsedTime * 0.3;
                 shieldGroup.rotation.x = mouseY * 0.3;
                 shieldGroup.rotation.z = mouseX * 0.2;
-                shieldGroup.scale.setScalar(1 + shieldPhase * 1.5); // scale up as it approaches
+                shieldGroup.scale.setScalar(1 + shieldPhase * 1.5);
 
-                // Door animation (appears after 40% scroll)
+                // Door
                 const doorPhase = Math.max(0, Math.min(1, (scrollProgress - 0.35) / 0.3));
-                doorGroup.position.z = -5 + doorPhase * 2; // door moves slightly forward
-                // Door kick: door panel rotates and flies off
+                doorGroup.position.z = -5 + doorPhase * 2;
                 if (doorPhase > 0.5) {
-                    const kickProgress = (doorPhase - 0.5) * 2; // 0 to 1
+                    const kickProgress = (doorPhase - 0.5) * 2;
                     doorGroup.userData.doorPanel.rotation.y = kickProgress * -1.5;
                     doorGroup.userData.doorPanel.position.x = kickProgress * -3;
                     doorGroup.userData.doorPanel.position.z = kickProgress * 2;
@@ -484,68 +482,44 @@
                     doorGroup.userData.doorPanel.rotation.y = 0;
                     doorGroup.userData.doorPanel.position.set(0, 1.6, 0);
                 }
-                // Door opacity fade after 70%
-                if (scrollProgress > 0.7) {
-                    const fadeOut = (scrollProgress - 0.7) / 0.3;
-                    doorGroup.visible = fadeOut < 1;
-                } else {
-                    doorGroup.visible = true;
-                }
+                doorGroup.visible = !(scrollProgress > 0.7 && (scrollProgress - 0.7) / 0.3 >= 1);
 
-                // Agent animation
+                // Agent
                 const agentPhase = Math.max(0, Math.min(1, (scrollProgress - 0.4) / 0.4));
-                // Agent starts at z=-8, moves forward aggressively
                 agentGroup.position.z = -8 + agentPhase * 12;
                 agentGroup.position.x = Math.sin(agentPhase * Math.PI) * 0.5;
                 agentGroup.rotation.y = 0.2 + agentPhase * 0.3;
                 agentGroup.rotation.x = Math.sin(agentPhase * Math.PI * 2) * 0.1;
-                // Scale up slightly
                 agentGroup.scale.setScalar(1 + agentPhase * 0.3);
 
-                // Fade out entire scroll group after 80%
+                // Fade out (fixed: use pre-collected unique materials)
+                let fade = 1;
                 if (scrollProgress > 0.8) {
-                    const fade = 1 - (scrollProgress - 0.8) / 0.2;
-                    scrollGroup.traverse((child) => {
-                        if (child.isMesh && child.material) {
-                            if (Array.isArray(child.material)) {
-                                child.material.forEach(m => m.opacity = fade);
-                            } else {
-                                child.material.opacity = fade;
-                                child.material.transparent = fade < 1;
-                            }
-                        }
-                    });
-                } else {
-                    scrollGroup.traverse((child) => {
-                        if (child.isMesh && child.material) {
-                            if (Array.isArray(child.material)) {
-                                child.material.forEach(m => m.opacity = 1);
-                            } else {
-                                child.material.opacity = 1;
-                                child.material.transparent = false;
-                            }
-                        }
-                    });
+                    fade = 1 - (scrollProgress - 0.8) / 0.2;
                 }
+                scrollMaterials.forEach(m => {
+                    m.opacity = fade;
+                    m.transparent = fade < 1;
+                });
+                scrollGroup.visible = fade > 0.001;
 
-                // Police light flashing
+                // Police lights
                 const flash = Math.sin(elapsedTime * 10) > 0 ? 1 : 0;
                 policeLightRed.intensity = flash * 1.5;
                 policeLightBlue.intensity = (1 - flash) * 1.5;
 
-                // Camera movement based on scroll and mouse
+                // Camera
                 if (scrollProgress < 0.5) {
                     camera.position.x = mouseX * 0.5;
                     camera.position.y = 2 + mouseY * 0.3;
                     camera.lookAt(0, 2, 0);
                 } else {
-                    // Camera follows action
                     camera.position.x = mouseX * 0.3;
                     camera.position.y = 2.5 + mouseY * 0.2;
                     camera.lookAt(0, 1.5, scrollProgress * 10);
                 }
 
-                // Particles rotate slowly
+                // Particles
                 particles.rotation.y = elapsedTime * 0.02;
 
                 renderer.render(scene, camera);
@@ -553,30 +527,40 @@
 
             animate();
 
-            // --- HANDLE RESIZE ---
+            // --- RESIZE ---
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
 
-            // --- FORM SUBMISSION ---
+            // --- FORM ---
             const form = document.getElementById('fib-form');
             const confirmation = document.getElementById('confirmation');
             const caseNumberEl = document.getElementById('case-number');
+            const submitBtn = document.getElementById('submit-btn');
+            const originalBtnText = submitBtn.textContent;
 
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                // Generate random case number
-                const caseNum = Math.floor(1000 + Math.random() * 9000);
-                caseNumberEl.textContent = `#FIB-${caseNum}`;
-                confirmation.classList.remove('hidden');
-                form.reset();
-                // Scroll to confirmation
-                confirmation.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (submitBtn.disabled) return;
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'ОТПРАВКА...';
+
+                // Simulate async submission
+                setTimeout(() => {
+                    const caseNum = Math.floor(1000 + Math.random() * 9000);
+                    caseNumberEl.textContent = `#FIB-${caseNum}`;
+                    confirmation.classList.remove('hidden');
+                    form.reset();
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    confirmation.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 600);
             });
 
-            // --- INTERSECTION OBSERVER FOR FADE-IN ---
+            // --- FADE-IN OBSERVER ---
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
