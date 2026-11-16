@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIB Recruitment — Закон не спрашивает</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #0a0c0f;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .content-layer * {
+            pointer-events: auto;
+        }
+        .hero-section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 8vw;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.6);
+            transform: translateY(-4px);
+        }
+        .btn-fib {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            transition: all 0.2s;
+        }
+        .btn-fib:hover {
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+            transform: scale(1.02);
+        }
+        .input-field {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #1e3a8a;
+            color: #e2e8f0;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+        .blink {
+            animation: blink 1.5s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        /* Плавное появление блоков при скролле */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-in-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- Content Layer -->
+    <div class="content-layer">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="max-w-2xl">
+                <h1 class="text-5xl md:text-7xl font-black text-white leading-tight tracking-tight drop-shadow-2xl">
+                    ЗАКОН <br>
+                    <span class="text-blue-500">НЕ СПРАШИВАЕТ.</span><br>
+                    ОН ДЕЙСТВУЕТ.
+                </h1>
+                <p class="mt-6 text-xl md:text-2xl text-slate-300 font-light tracking-wide border-l-4 border-blue-500 pl-4">
+                    ВСТУПАЙ В FIB
+                </p>
+                <div class="mt-8 flex gap-4">
+                    <a href="#join" class="btn-fib inline-block px-8 py-3 rounded-sm font-bold text-white uppercase tracking-wider text-sm">
+                        Подать заявку
+                    </a>
+                    <div class="px-6 py-3 text-slate-400 text-sm font-mono border border-slate-700 rounded-sm bg-black/30">
+                        <span class="text-blue-400 blink">●</span> RECRUITMENT OPEN
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Motivational Cards -->
+        <section id="motivation" class="min-h-screen flex flex-col justify-center px-6 md:px-16 py-20">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-12 text-center fade-in-section">
+                ПОЧЕМУ <span class="text-blue-500">FIB</span>?
+            </h2>
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto w-full">
+                <!-- Card 1 -->
+                <div class="glass-card p-8 rounded-lg fade-in-section">
+                    <div class="text-5xl mb-4">🛡️</div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Элита правопорядка</h3>
+                    <p class="text-slate-300 leading-relaxed">
+                        Пока другие патрулируют улицы, ты раскрываешь дела федерального масштаба. Только лучшие из лучших.
+                    </p>
+                </div>
+                <!-- Card 2 -->
+                <div class="glass-card p-8 rounded-lg fade-in-section" style="transition-delay: 0.1s;">
+                    <div class="text-5xl mb-4">⚙️</div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Передовое оснащение</h3>
+                    <p class="text-slate-300 leading-relaxed">
+                        Доступ к лучшему вооружению, спецтехнике и закрытым базам данных штата. Никаких компромиссов.
+                    </p>
+                </div>
+                <!-- Card 3 -->
+                <div class="glass-card p-8 rounded-lg fade-in-section" style="transition-delay: 0.2s;">
+                    <div class="text-5xl mb-4">🤝</div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Братство и дисциплина</h3>
+                    <p class="text-slate-300 leading-relaxed">
+                        Стань частью сплоченной команды, где каждый прикроет спину в горячей точке. Мы — одна семья.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Application Form -->
+        <section id="join" class="min-h-screen flex flex-col justify-center items-center px-6 py-20 pb-32">
+            <div class="w-full max-w-2xl">
+                <div class="glass-card p-8 md:p-12 rounded-lg border-blue-500/50">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs font-mono text-slate-400 uppercase tracking-widest">Secure Terminal // FIB Recruitment</span>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">ПОДАЙ ЗАЯВКУ</h2>
+                    <p class="text-slate-400 mb-8 text-sm font-mono">Введите данные для инициализации дела</p>
+
+                    <form id="fib-form" class="space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-xs font-mono text-blue-400 mb-1 uppercase">Имя и Фамилия</label>
+                                <input type="text" name="fullname" required class="input-field w-full px-4 py-3 rounded-sm text-sm" placeholder="John Doe">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-blue-400 mb-1 uppercase">Номер паспорта (ID)</label>
+                                <input type="text" name="passport" required class="input-field w-full px-4 py-3 rounded-sm text-sm" placeholder="123456">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-xs font-mono text-blue-400 mb-1 uppercase">Сколько лет в штате</label>
+                                <input type="number" name="years" required min="0" class="input-field w-full px-4 py-3 rounded-sm text-sm" placeholder="5">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-blue-400 mb-1 uppercase">Опыт в гос. структурах</label>
+                                <select name="experience" class="input-field w-full px-4 py-3 rounded-sm text-sm">
+                                    <option value="none">Нет опыта</option>
+                                    <option value="LSPD">LSPD</option>
+                                    <option value="LSCSD">LSCSD</option>
+                                    <option value="SANG">SANG</option>
+                                    <option value="GOV">GOV</option>
+                                    <option value="EMS">EMS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-blue-400 mb-1 uppercase">Спецсвязь (Discord)</label>
+                            <input type="text" name="discord" required class="input-field w-full px-4 py-3 rounded-sm text-sm" placeholder="username#0000">
+                        </div>
+                        <div class="pt-4">
+                            <button type="submit" class="btn-fib w-full py-4 rounded-sm font-bold text-white uppercase tracking-widest text-lg">
+                                ПОДАТЬ ЗАЯВКУ В FIB
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Confirmation Message -->
+                    <div id="confirmation" class="hidden mt-6 p-6 bg-green-900/30 border border-green-500/50 rounded-sm text-center">
+                        <p class="text-green-400 font-mono text-sm mb-2">ЗАЯВКА ПРИНЯТА</p>
+                        <p class="text-white text-2xl font-bold" id="case-number">#FIB-0000</p>
+                        <p class="text-slate-400 text-xs mt-2 font-mono">Ожидайте вызова в штаб-квартиру</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        (function() {
+            // --- THREE.JS SETUP ---
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0c0f);
+            scene.fog = new THREE.FogExp2(0x0a0c0f, 0.0025);
+
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 2, 12);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // --- LIGHTS ---
+            const ambientLight = new THREE.AmbientLight(0x404060);
+            scene.add(ambientLight);
+
+            const keyLight = new THREE.DirectionalLight(0x3b82f6, 1.2);
+            keyLight.position.set(2, 5, 5);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 1024;
+            keyLight.shadow.mapSize.height = 1024;
+            scene.add(keyLight);
+
+            const fillLight = new THREE.PointLight(0x1e3a8a, 0.8, 30);
+            fillLight.position.set(-3, 2, 4);
+            scene.add(fillLight);
+
+            const rimLight = new THREE.PointLight(0x60a5fa, 0.6, 20);
+            rimLight.position.set(0, 4, -5);
+            scene.add(rimLight);
+
+            // Dynamic police lights (flashing)
+            const policeLightRed = new THREE.PointLight(0xff0000, 0, 20);
+            policeLightRed.position.set(-2, 3, 2);
+            scene.add(policeLightRed);
+            const policeLightBlue = new THREE.PointLight(0x0000ff, 0, 20);
+            policeLightBlue.position.set(2, 3, 2);
+            scene.add(policeLightBlue);
+
+            // --- 3D OBJECTS ---
+
+            // Group for all scroll-driven content
+            const scrollGroup = new THREE.Group();
+            scene.add(scrollGroup);
+
+            // 1. FIB Shield (low-poly style)
+            const shieldGroup = new THREE.Group();
+            
+            // Shield body (hexagon-ish)
+            const shieldGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.2, 6);
+            const shieldMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, emissive: 0x0a1a3a, roughness: 0.3, metalness: 0.7 });
+            const shieldBody = new THREE.Mesh(shieldGeo, shieldMat);
+            shieldBody.rotation.x = Math.PI / 2;
+            shieldBody.rotation.z = Math.PI / 6;
+            shieldBody.castShadow = true;
+            shieldBody.receiveShadow = true;
+            shieldGroup.add(shieldBody);
+
+            // Shield rim
+            const rimGeo = new THREE.TorusGeometry(1.25, 0.06, 8, 6);
+            const rimMat = new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 0.8 });
+            const rim = new THREE.Mesh(rimGeo, rimMat);
+            rim.rotation.x = Math.PI / 2;
+            rim.rotation.z = Math.PI / 6;
+            shieldGroup.add(rim);
+
+            // Center star / emblem
+            const starGeo = new THREE.OctahedronGeometry(0.35, 0);
+            const starMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x3b82f6, emissiveIntensity: 1.5 });
+            const star = new THREE.Mesh(starGeo, starMat);
+            star.position.z = 0.15;
+            shieldGroup.add(star);
+
+            // Cross behind star (thin boxes)
+            const crossMat = new THREE.MeshStandardMaterial({ color: 0xbfdbfe, emissive: 0x1e3a8a });
+            const cross1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 0.02), crossMat);
+            cross1.position.z = 0.12;
+            shieldGroup.add(cross1);
+            const cross2 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.06, 0.02), crossMat);
+            cross2.position.z = 0.12;
+            shieldGroup.add(cross2);
+
+            shieldGroup.position.set(0, 2.5, 0);
+            scrollGroup.add(shieldGroup);
+
+            // 2. Door (appears on scroll)
+            const doorGroup = new THREE.Group();
+            const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6, metalness: 0.4 });
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.3, emissive: 0x050810 });
+            
+            // Door frame (U-shape)
+            const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3.2, 0.2), doorFrameMat);
+            frameLeft.position.set(-1.2, 1.6, 0);
+            frameLeft.castShadow = true;
+            doorGroup.add(frameLeft);
+            const frameRight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3.2, 0.2), doorFrameMat);
+            frameRight.position.set(1.2, 1.6, 0);
+            frameRight.castShadow = true;
+            doorGroup.add(frameRight);
+            const frameTop = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.2, 0.2), doorFrameMat);
+            frameTop.position.set(0, 3.2, 0);
+            frameTop.castShadow = true;
+            doorGroup.add(frameTop);
+
+            // The door itself (will be animated)
+            const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.0, 0.15), doorMat);
+            doorPanel.position.set(0, 1.6, 0);
+            doorPanel.castShadow = true;
+            doorPanel.receiveShadow = true;
+            doorGroup.add(doorPanel);
+            
+            // Door handle
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+            const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), handleMat);
+            handle.position.set(0.8, 1.6, 0.12);
+            doorPanel.add(handle);
+
+            // Store reference to door panel for animation
+            doorGroup.userData.doorPanel = doorPanel;
+
+            doorGroup.position.set(0, 0, -5);
+            scrollGroup.add(doorGroup);
+
+            // 3. Agent silhouette (stylized, dynamic pose)
+            const agentGroup = new THREE.Group();
+
+            const suitMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4, metalness: 0.2 });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0x8b6b4a, roughness: 0.7 });
+            const glassMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, emissive: 0x3b82f6, emissiveIntensity: 0.3, metalness: 0.9, roughness: 0.1 });
+
+            // Torso
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.0, 0.35), suitMat);
+            torso.position.y = 1.2;
+            torso.castShadow = true;
+            agentGroup.add(torso);
+
+            // Head
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), skinMat);
+            head.position.y = 1.9;
+            head.castShadow = true;
+            agentGroup.add(head);
+
+            // Glasses (neon outline)
+            const glasses = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.1), glassMat);
+            glasses.position.set(0, 1.95, 0.22);
+            agentGroup.add(glasses);
+
+            // Arms (dynamic pose - one forward, one back)
+            const armMat = suitMat;
+            // Right arm (forward, holding carbine)
+            const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.2), armMat);
+            rightArm.position.set(0.5, 1.4, 0.3);
+            rightArm.rotation.x = -1.0;
+            rightArm.rotation.z = -0.3;
+            rightArm.castShadow = true;
+            agentGroup.add(rightArm);
+            
+            // Left arm (back)
+            const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.2), armMat);
+            leftArm.position.set(-0.5, 1.3, -0.2);
+            leftArm.rotation.x = 0.5;
+            leftArm.rotation.z = 0.3;
+            leftArm.castShadow = true;
+            agentGroup.add(leftArm);
+
+            // Legs (dynamic, one forward)
+            const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), suitMat);
+            rightLeg.position.set(0.2, 0.5, 0.2);
+            rightLeg.rotation.x = 0.3;
+            rightLeg.castShadow = true;
+            agentGroup.add(rightLeg);
+            
+            const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), suitMat);
+            leftLeg.position.set(-0.2, 0.5, -0.2);
+            leftLeg.rotation.x = -0.2;
+            leftLeg.castShadow = true;
+            agentGroup.add(leftLeg);
+
+            // Carbine (simple low-poly)
+            const gunMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.8, roughness: 0.3 });
+            const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.8), gunMat);
+            gunBody.position.set(0.7, 1.6, 0.8);
+            gunBody.rotation.x = -0.2;
+            agentGroup.add(gunBody);
+            const gunBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 6), gunMat);
+            gunBarrel.position.set(0.7, 1.65, 1.2);
+            gunBarrel.rotation.x = Math.PI / 2;
+            agentGroup.add(gunBarrel);
+
+            agentGroup.position.set(0, 0, -8);
+            agentGroup.rotation.y = 0.2;
+            scrollGroup.add(agentGroup);
+
+            // --- PARTICLES (for atmosphere) ---
+            const particleGeo = new THREE.BufferGeometry();
+            const particleCount = 300;
+            const positions = new Float32Array(particleCount * 3);
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 40;
+                positions[i+1] = Math.random() * 20;
+                positions[i+2] = (Math.random() - 0.5) * 40 - 10;
+            }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particleMat = new THREE.PointsMaterial({ color: 0x3b82f6, size: 0.05, transparent: true, opacity: 0.4 });
+            const particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+
+            // --- SCROLL LOGIC ---
+            let scrollProgress = 0; // 0 to 1
+            const scrollRange = 2000; // pixels for full animation
+
+            function updateScrollProgress() {
+                const scrollY = window.scrollY;
+                scrollProgress = Math.min(1, Math.max(0, scrollY / scrollRange));
+            }
+
+            window.addEventListener('scroll', updateScrollProgress);
+
+            // --- MOUSE INTERACTION (for hero shield) ---
+            let mouseX = 0, mouseY = 0;
+            window.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+                mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+            });
+
+            // --- ANIMATION LOOP ---
+            let clock = new THREE.Clock();
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const delta = clock.getDelta();
+                const elapsedTime = performance.now() * 0.001;
+
+                // Update scroll progress
+                updateScrollProgress();
+
+                // --- SCROLL-DRIVEN ANIMATIONS ---
+
+                // Phase 1: 0 - 0.4 -> Shield flies forward / camera moves
+                // Phase 2: 0.4 - 0.7 -> Door appears, agent kicks it
+                // Phase 3: 0.7 - 1.0 -> Agent flies forward, scene fades
+
+                // Shield animation
+                const shieldPhase = Math.min(1, scrollProgress / 0.4);
+                shieldGroup.position.z = shieldPhase * 15; // flies toward camera
+                shieldGroup.position.y = 2.5 + Math.sin(elapsedTime * 0.5) * 0.1;
+                shieldGroup.rotation.y = elapsedTime * 0.3;
+                shieldGroup.rotation.x = mouseY * 0.3;
+                shieldGroup.rotation.z = mouseX * 0.2;
+                shieldGroup.scale.setScalar(1 + shieldPhase * 1.5); // scale up as it approaches
+
+                // Door animation (appears after 40% scroll)
+                const doorPhase = Math.max(0, Math.min(1, (scrollProgress - 0.35) / 0.3));
+                doorGroup.position.z = -5 + doorPhase * 2; // door moves slightly forward
+                // Door kick: door panel rotates and flies off
+                if (doorPhase > 0.5) {
+                    const kickProgress = (doorPhase - 0.5) * 2; // 0 to 1
+                    doorGroup.userData.doorPanel.rotation.y = kickProgress * -1.5;
+                    doorGroup.userData.doorPanel.position.x = kickProgress * -3;
+                    doorGroup.userData.doorPanel.position.z = kickProgress * 2;
+                    doorGroup.userData.doorPanel.position.y = 1.6 + kickProgress * 0.5;
+                } else {
+                    doorGroup.userData.doorPanel.rotation.y = 0;
+                    doorGroup.userData.doorPanel.position.set(0, 1.6, 0);
+                }
+                // Door opacity fade after 70%
+                if (scrollProgress > 0.7) {
+                    const fadeOut = (scrollProgress - 0.7) / 0.3;
+                    doorGroup.visible = fadeOut < 1;
+                } else {
+                    doorGroup.visible = true;
+                }
+
+                // Agent animation
+                const agentPhase = Math.max(0, Math.min(1, (scrollProgress - 0.4) / 0.4));
+                // Agent starts at z=-8, moves forward aggressively
+                agentGroup.position.z = -8 + agentPhase * 12;
+                agentGroup.position.x = Math.sin(agentPhase * Math.PI) * 0.5;
+                agentGroup.rotation.y = 0.2 + agentPhase * 0.3;
+                agentGroup.rotation.x = Math.sin(agentPhase * Math.PI * 2) * 0.1;
+                // Scale up slightly
+                agentGroup.scale.setScalar(1 + agentPhase * 0.3);
+
+                // Fade out entire scroll group after 80%
+                if (scrollProgress > 0.8) {
+                    const fade = 1 - (scrollProgress - 0.8) / 0.2;
+                    scrollGroup.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(m => m.opacity = fade);
+                            } else {
+                                child.material.opacity = fade;
+                                child.material.transparent = fade < 1;
+                            }
+                        }
+                    });
+                } else {
+                    scrollGroup.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(m => m.opacity = 1);
+                            } else {
+                                child.material.opacity = 1;
+                                child.material.transparent = false;
+                            }
+                        }
+                    });
+                }
+
+                // Police light flashing
+                const flash = Math.sin(elapsedTime * 10) > 0 ? 1 : 0;
+                policeLightRed.intensity = flash * 1.5;
+                policeLightBlue.intensity = (1 - flash) * 1.5;
+
+                // Camera movement based on scroll and mouse
+                if (scrollProgress < 0.5) {
+                    camera.position.x = mouseX * 0.5;
+                    camera.position.y = 2 + mouseY * 0.3;
+                    camera.lookAt(0, 2, 0);
+                } else {
+                    // Camera follows action
+                    camera.position.x = mouseX * 0.3;
+                    camera.position.y = 2.5 + mouseY * 0.2;
+                    camera.lookAt(0, 1.5, scrollProgress * 10);
+                }
+
+                // Particles rotate slowly
+                particles.rotation.y = elapsedTime * 0.02;
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // --- HANDLE RESIZE ---
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // --- FORM SUBMISSION ---
+            const form = document.getElementById('fib-form');
+            const confirmation = document.getElementById('confirmation');
+            const caseNumberEl = document.getElementById('case-number');
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                // Generate random case number
+                const caseNum = Math.floor(1000 + Math.random() * 9000);
+                caseNumberEl.textContent = `#FIB-${caseNum}`;
+                confirmation.classList.remove('hidden');
+                form.reset();
+                // Scroll to confirmation
+                confirmation.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            // --- INTERSECTION OBSERVER FOR FADE-IN ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.fade-in-section').forEach(el => observer.observe(el));
+
+        })();
+    </script>
+</body>
+</html>
